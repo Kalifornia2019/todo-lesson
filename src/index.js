@@ -8,25 +8,38 @@ import {
   clearTodoInput,
   getTodoInputItems,
   validateTodoInput,
+  todoEnter,
 } from "./todoInput";
 
 const todoInputWrapper = document.querySelector(".todo-input-wrapper");
 const { todoInput, todoButton } = getTodoInputItems(todoInputWrapper);
 const todoList = document.querySelector(".todo-list");
 const todoSelect = document.querySelector(".todo-select");
-
+const todoHelper = todoInputWrapper.querySelector(".todo-helper");
 document.addEventListener("DOMContentLoaded", onDOMLoaded);
-todoInput.addEventListener("input", validateTodoInput);
+todoInput.addEventListener("input", () => validateTodoInput(todoInputWrapper));
 todoButton.addEventListener("click", addTodo);
 todoSelect.addEventListener("change", filterTodos);
 
+// 3. when todoInput is not in focus, helper text should not be displayed
+todoInput.onblur = () => {
+  todoHelper.innerHTML = "";
+};
+todoInput.onfocus = () => {
+  todoHelper.innerHTML = "Minimum length is 3 characters";
+};
+
+// 2. forbid form submit with enter key, when input value is less than 3 characters
+todoInput.addEventListener("keypress", (event) => todoEnter(event, todoInput));
+
 function onDOMLoaded() {
   renderTodosFromSStorage();
+  inActiveSelect();
   validateTodoInput(todoInputWrapper);
 }
 
 function renderTodosFromSStorage() {
-  let todos = getTodosFromSStorage();
+  const todos = JSON.parse(sessionStorage.getItem("todos"));
 
   todos.forEach((todoValue) => {
     const todoItem = getTodoItem(todoValue);
@@ -39,9 +52,12 @@ function renderTodosFromSStorage() {
 function addTodo(event) {
   event.preventDefault();
 
-  saveTodoToSStorage(todoInput.value);
+  //if addtodo select active
+  const todoRenderItem = { name: todoInput.value, isCompleted: false };
+  todoSelect.disabled = false;
+  saveTodoToSStorage(todoRenderItem);
 
-  const todoItem = getTodoItem(todoInput.value);
+  const todoItem = getTodoItem(todoRenderItem);
   todoList.appendChild(todoItem);
 
   clearTodoInput(todoInputWrapper);
@@ -50,11 +66,23 @@ function addTodo(event) {
 function filterTodos(e) {
   const todoItems = todoList.childNodes;
 
+  console.log(e.target.value);
   filterTodoItems(todoItems, e.target.value);
 }
 
-// TODO fix bugs:
 // 1. select should be disabled when no option is displayed
-// 2. forbid form submit with enter key, when input value is less than 3 characters
-// 3. when todoInput is not in focus, helper text should not be displayed
-// 4. save to session storage todo state: completed, not completed - and update it
+function inActiveSelect() {
+  let todos = getTodosFromSStorage();
+
+  if (!todos.length) {
+    todoSelect.disabled = true;
+  }
+}
+todoValidationMessage();
+
+function todoValidationMessage() {
+  if (!todoInput.checkValidity()) {
+    document.querySelector(".todo-helper").innerHTML =
+      todoInput.validationMessage;
+  }
+}

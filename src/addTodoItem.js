@@ -1,13 +1,18 @@
 import { removeTodoFromSStorage } from "./sessionStorage";
+import { todoChangeSStorageComleted } from "./sessionStorage";
 
-export const getTodoItem = (text) => {
+export const getTodoItem = ({ name, isCompleted }) => {
   // Create Todo Item
   const todoItem = document.createElement("li");
   todoItem.classList.add("todo-item");
 
+  if (isCompleted) {
+    todoItem.classList.toggle("todo-item_completed");
+  }
+
   // Create and add Todo Text
   const todoText = document.createElement("span");
-  todoText.innerText = text;
+  todoText.innerText = name;
   todoText.classList.add("todo-text");
   todoItem.appendChild(todoText);
 
@@ -43,5 +48,6 @@ function toggleCheckButton(todoItem) {
   return (e) => {
     e.preventDefault();
     todoItem.classList.toggle("todo-item_completed");
+    todoChangeSStorageComleted(todoItem);
   };
 }
